@@ -1,0 +1,105 @@
+
+# Copyright 2021 Google LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Fail on any error.
+set -eo pipefail
+
+# Default to the latest released ESPv2 version.
+BASE_IMAGE_NAME="gcr.io/endpoints-release/endpoints-runtime-serverless"
+ESP_TAG="2"
+
+function error_exit() {
+  # ${BASH_SOURCE[1]} is the file name of the caller.
+  echo "${BASH_SOURCE[1]}: line ${BASH_LINENO[0]}: ${1:-Unknown Error.} (exit ${2:-1})" 1>&2
+  exit ${2:-1}
+}
+
+while getopts :c:s:p:v:i: arg; do
+  case ${arg} in
+    c) CONFIG_ID="${OPTARG}";;
+    s) SERVICE="${OPTARG}";;
+    p) PROJECT="${OPTARG}";;
+    v) ESP_TAG="${OPTARG}";;
+    i)
+      BASE_IMAGE="${OPTARG}"
+      ESP_FULL_VERSION="custom"
+      ;;
+    \?) error_exit "Unrecognized argument -${OPTARG}";;
+  esac
+done
+
+[[ -n "${PROJECT}" ]] || error_exit "Missing required PROJECT"
+[[ -n "${SERVICE}" ]] || error_exit "Missing required SERVICE"
+[[ -n "${CONFIG_ID}" ]] || error_exit "Missing required CONFIG_ID"
+
+# If user did not pass in custom image, then form the fully-qualified base image.
+if [ -z "${BASE_IMAGE}" ]; then
+  BASE_IMAGE="${BASE_IMAGE_NAME}:${ESP_TAG}"
+fi;
+echo "Using base image: ${BASE_IMAGE}"
+
+# If user did not pass in a custom image, then determine the ESP version.
+if [ -z "${ESP_FULL_VERSION}" ]; then
+  echo "Determining fully-qualified ESP version for tag: ${ESP_TAG}"
+
+  ALL_TAGS=$(gcloud container images list-tags "${BASE_IMAGE_NAME}" \
+      --filter="tags~^${ESP_TAG}$" \
+      --format="value(tags)")
+  IFS=',' read -ra TAGS_ARRAY <<< "${ALL_TAGS}"
+
+  if [ ${#TAGS_ARRAY[@]} -eq 0 ]; then
+    error_exit "Did not find ESP version: ${ESP_TAG}"
+  fi;
+
+  # Find the tag with the longest length.
+  ESP_FULL_VERSION=""
+  for tag in "${TAGS_ARRAY[@]}"; do
+     if [ ${#tag} -gt ${#ESP_FULL_VERSION} ]; then
+        ESP_FULL_VERSION=${tag}
+     fi
+  done
+fi
+echo "Building image for ESP version: ${ESP_FULL_VERSION}"
+
+cd "$(mktemp -d /tmp/docker.XXXX)"
+
+# Be careful about exposing the access token.
+curl --fail -o "service.json" -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  "https://servicemanagement.googleapis.com/v1/services/${SERVICE}/configs/${CONFIG_ID}?view=FULL" \
+  || error_exit "Failed to download service config"
+
+(
+set -x
+
+cat <<EOF > Dockerfile
+FROM ${BASE_IMAGE}
+
+USER root
+ENV ENDPOINTS_SERVICE_PATH /etc/endpoints/service.json
+COPY service.json \${ENDPOINTS_SERVICE_PATH}
+RUN chown -R envoy:envoy \${ENDPOINTS_SERVICE_PATH} && chmod -R 755 \${ENDPOINTS_SERVICE_PATH}
+USER envoy
+
+ENTRYPOINT ["/env_start_proxy.py"]
+EOF
+
+NEW_IMAGE="gcr.io/${PROJECT}/endpoints-runtime-serverless:${ESP_FULL_VERSION}-${SERVICE}-${CONFIG_ID}"
+gcloud builds submit --tag "${NEW_IMAGE}" . --project="${PROJECT}"
+)
+
+# Delete the temporary directory we created earlier.
+# Move back to the previous directory with an echo.
+rm -r "${PWD}"
+cd ~-

@@ -1,0 +1,20 @@
+{
+  "name": "GCS Upload",
+  "description": "An Apache Beam streaming pipeline that reads reads a GCS file and uploads it to BigQuery.",
+  "parameters": [
+    {
+      "name": "inputPath",
+      "label": "GCS Input File",
+      "helpText": "GCS Input File"
+    },
+    {
+      "name": "outputTable",
+      "label": "BigQuery output table",
+      "helpText": "BigQuery table spec to write to, in the form 'project:dataset.table'.",
+      "isOptional": true,
+      "regexes": [
+        "[^:]+:[^.]+[.].+"
+      ]
+    }
+  ]
+}

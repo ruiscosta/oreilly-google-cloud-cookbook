@@ -1,0 +1,184 @@
+<!-- Copyright 2021, Google, Inc.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+ 
+    http://www.apache.org/licenses/LICENSE-2.0
+ 
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. -->
+
+<!doctype html>
+<html lang=en>
+<head>
+<meta charset=utf-8>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Congratulations | Cloud Run</title>
+<link href="https://fonts.googleapis.com/css?family=Roboto" rel="preload" as="font">
+<style>
+ body {
+	font-family: 'Roboto', sans-serif;
+	font-display: fallback;
+	background: url('/assets/cloud_bg.svg');
+	background-size: cover;
+	background-position: center;
+	line-height: 1.6;
+ }
+
+h1 {
+	font-size: 24px;
+	font-weight: bold;
+	margin-bottom: 0px;
+}
+
+.congrats {
+	font-size: 18px;
+	font-weight: normal;
+	margin-top: 4px;
+}
+
+h3 {
+	font-size: 20px;
+	margin-bottom: 0px;
+}
+
+.next {
+    font-size: 15px;
+	margin-top: 8px;
+	margin-bottom: 8px;
+}
+
+.container {
+	max-width: 700px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.hero {
+	margin-top: 172px;
+}
+
+.hero .logo {
+	width: 140px;
+	float: left;
+	margin-right: 32px;
+}
+
+.hero .message {
+	font-size: 15px;
+	text-align: center;
+	margin-bottom: 24px;
+}
+
+.details {
+	clear: both;
+	height: 400px;
+	line-height: 1.8;
+}
+
+.callout {
+	font-size: 14px;
+	color: #1967D2;
+	font-weight: 600;
+	padding: 16px 24px 16px 40px;
+	background: url('/assets/lightbulb_icon.svg') #E8F0FE ;
+	background-position: 16px 16px;
+	background-repeat: no-repeat;
+	line-height: 1.6;
+}
+
+code {
+	font-family: 'Roboto Mono', Courier, monospace;
+	color: #A30038;
+	background-color: #F8F8F8;
+	border: 1px solid #DDD;
+	border-radius: 2px;
+	padding: 0 6px;
+	font-weight: 500;
+}
+
+.cta a {
+	background-color:rgba(233, 233, 233, 0.9);
+	color: rgb(14, 14, 14);
+	text-decoration: none;
+	padding: 8px 12px;
+	margin-top: 8px;
+	margin-right: 4px;
+	min-height: 36px;
+	border-radius: 2px;
+	font-weight: 600;
+}
+
+.cta a:hover {
+	background-color:rgba(213, 213, 213, 0.9);
+}
+
+.cta a.primary {
+	color: white;
+	background-color: rgb(14, 101, 241);
+}
+
+.cta a.primary:hover {
+    background-color: rgb(66, 133, 244, 0.9);
+}
+
+@media (max-width: 600px) {
+    .hero .logo {
+        float: initial;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+	.container {
+        margin-top: 0;
+	}
+
+    .hero {
+        margin-top: 0;
+        margin-bottom: 24px;
+	}
+}
+@media (prefers-color-scheme: dark) {
+    body {
+        background: black url('/assets/dark_bg.svg');
+        color:white;
+    }
+}
+
+</style>
+</head>
+
+<body>
+	<div class="container">
+		<div class="hero">
+			<div style="text-align:center;">
+				<picture>
+					<img src="/assets/celebration.jpg" alt="Celebrating" width="427" height="231">
+				</picture>
+			</div>
+
+			<div class="message">
+				<h1>It's running!</h1>
+				<div class="congrats">Congratulations, you successfully deployed a container image to Cloud Run</div>
+			</div>
+		</div>
+
+		<div class="details">
+			<p>
+				{{ if and .Project (and .Region .Service)  }}
+					This created the revision <code>{{.Revision}}</code> of the Cloud Run service <code>{{.Service}}</code>
+					{{if .Region}} in <code>{{.Region}}</code>{{end}}
+					{{if .Project}} in the GCP project <code>{{.Project}}</code>{{end}}.
+				{{ else }}
+					This container <strong>does not</strong> seem to be running
+					on Cloud Run.
+				{{ end }}
+			</p>
+		</div>
+	</div>
+</body>
+</html>

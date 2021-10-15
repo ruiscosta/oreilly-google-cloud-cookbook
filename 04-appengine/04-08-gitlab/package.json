@@ -1,0 +1,13 @@
+{
+    "name": "04-08-gitlab",
+    "engines": {
+      "node": ">=14.0.0"
+    },
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1"
+    }
+  }
+  

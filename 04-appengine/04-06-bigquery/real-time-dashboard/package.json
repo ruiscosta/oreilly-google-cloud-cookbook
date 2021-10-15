@@ -1,0 +1,14 @@
+{
+  "name": "04-06-bigquery",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "./node_modules/.bin/cubejs-server"
+  },
+  "template": "docker",
+  "templateVersion": "0.25.6",
+  "devDependencies": {
+    "@cubejs-backend/bigquery-driver": "^0.25.6",
+    "@cubejs-backend/server": "^0.25.6"
+  }
+}

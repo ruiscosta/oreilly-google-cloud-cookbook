@@ -1,0 +1,11 @@
+{
+  "name": "google-cloud-cookbook-02-08-endpoint",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "Rui Santos Costa",
+  "license": "ISC",
+  "dependencies": {
+    "escape-html": "^1.0.3"
+  }
+}
